@@ -1,6 +1,7 @@
 package com.nandotoding.authorization_service.controller;
 
 import com.nandotoding.authorization_service.exception.BadRequestException;
+import com.nandotoding.authorization_service.exception.UnauthorizedException;
 import com.nandotoding.authorization_service.model.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,5 +13,10 @@ public class ExceptionController {
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity handleBadRequestException(BadRequestException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getCode(), e.getStatus(), e.getMessage()));
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity handleUnauthorizedException(UnauthorizedException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(e.getCode(), e.getStatus(), e.getMessage()));
     }
 }

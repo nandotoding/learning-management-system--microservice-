@@ -15,11 +15,11 @@ public class JwtUtil {
     private String jwtSecret;
     @Value("${jwt.expiration}")
     private int jwtExp;
-    private Map<String, String> tokenStorage = new HashMap<>();
+    private Set<String> userSession = new HashSet<>();
 
-    public String generateToken(String subject) {
+    public String generateToken(String username) {
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(username)
                 .setIssuedAt(new Date())
                 .signWith(SignatureAlgorithm.HS256, jwtSecret)
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExp))
@@ -28,7 +28,7 @@ public class JwtUtil {
 
     public boolean validateToken(String token) {
         if (token == null) {
-            throw new UnauthorizedException();
+            throw new UnauthorizedException("Token is null");
         }
 
         try {
@@ -45,16 +45,23 @@ public class JwtUtil {
         }
     }
 
-    public void addTokenToStorage(String username, String token) {
-        this.tokenStorage.put(username, token);
+    public String extractUsername(String token) {
+        return Jwts.parser()
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
-    public boolean removeTokenFromStorage(String username) {
-        String removedToken = this.tokenStorage.remove(username);
-        return removedToken != null;
+    public void addSession(String username) {
+        this.userSession.add(username);
     }
 
-    public boolean isTokenRevoked(String username) {
-        return tokenStorage.containsKey(username);
+    public void removeSession(String username) {
+        this.userSession.remove(username);
+    }
+
+    public boolean isActiveSession(String username) {
+        return this.userSession.contains(username);
     }
 }

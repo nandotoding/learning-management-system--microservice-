@@ -60,20 +60,21 @@ public class AuthorizationServiceImplementation implements AuthorizationService 
             throw new BadRequestException("incorrect username or password");
         }
 
-        String token = jwtUtil.generateToken("mysubject");
-        jwtUtil.addTokenToStorage(credential.getUsername(), token);
+        String token = jwtUtil.generateToken(credential.getUsername());
+        jwtUtil.addSession(credential.getUsername());
         return new UserLoginResponse(credential.getUsername(), token);
     }
 
     @Override
     public void logoutUser(UserLogoutRequest userLogoutRequest) {
-        jwtUtil.removeTokenFromStorage(userLogoutRequest.getUsername());
+        jwtUtil.removeSession(userLogoutRequest.getUsername());
     }
 
     @Override
     public TokenValidationResponse validateToken(TokenValidationRequest tokenValidationRequest) {
         boolean isTokenValid = jwtUtil.validateToken(tokenValidationRequest.getToken());
-        boolean isTokenRevoked = jwtUtil.isTokenRevoked(tokenValidationRequest.getUsername());
-        return new TokenValidationResponse(isTokenValid && !isTokenRevoked);
+        String username = jwtUtil.extractUsername(tokenValidationRequest.getToken());
+        boolean isActiveSession = jwtUtil.isActiveSession(username);
+        return new TokenValidationResponse(isTokenValid && isActiveSession);
     }
 }
